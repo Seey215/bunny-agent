@@ -43,6 +43,11 @@ const ASK_USER_QUESTION_TOOL_NAMES = new Set([
 const ASK_USER_QUESTION_TIMEOUT_ANSWER_KEY = "__bunny_agent_timeout__";
 const WEB_SEARCH_TOOL_NAMES = new Set(["web_search"]);
 
+function hasOwn(value: object, key: PropertyKey): boolean {
+  // biome-ignore lint/suspicious/noPrototypeBuiltins: This package targets ES2020, which lacks Object.hasOwn.
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
 function emitStreamError(errorText: string): string[] {
   const errorLine =
     "data: " + JSON.stringify({ type: "error", errorText }) + "\n\n";
@@ -129,7 +134,7 @@ function extractWebSearchOutput(
   if (
     details !== null &&
     typeof details === "object" &&
-    Object.hasOwn(details, "web_search")
+    hasOwn(details, "web_search")
   ) {
     candidate = (details as { web_search?: unknown }).web_search;
     recognized = true;
@@ -163,14 +168,14 @@ function extractWebSearchOutput(
       if (
         value.details !== null &&
         typeof value.details === "object" &&
-        Object.hasOwn(value.details, "web_search")
+        hasOwn(value.details, "web_search")
       ) {
         candidate = (value.details as { web_search?: unknown }).web_search;
         serializedUsage = (value.details as ToolDetailsWithUsage).usage?.raw;
         recognized = true;
       } else if (
         value.type === "web_search_call" ||
-        Object.hasOwn(value, "schema_version")
+        hasOwn(value, "schema_version")
       ) {
         candidate = value;
         recognized = true;

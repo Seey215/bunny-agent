@@ -3,8 +3,8 @@ import {
   type WebSearchCallRecord,
 } from "@bunny-agent/manager/contracts";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildWebSearchTool as harnessSearch } from "../../../runner-harness/src/tools/web-search.js";
-import { buildWebSearchTool as nativeSearch } from "../web-tools.js";
+import { buildWebSearchTool as harnessSearch } from "../../runner-harness/src/tools/web-search.js";
+import { buildWebSearchTool as nativeSearch } from "../src/web-tools.js";
 
 type Provider = "brave" | "tavily";
 type Factory = typeof nativeSearch | typeof harnessSearch;
@@ -12,9 +12,8 @@ interface Result {
   content: Array<{ text?: string }>;
   details?: { web_search?: WebSearchCallRecord };
 }
-const originalFetch = globalThis.fetch;
 afterEach(() => {
-  globalThis.fetch = originalFetch;
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -31,7 +30,7 @@ async function execute(
         headers: { "content-type": "application/json" },
       }),
   );
-  globalThis.fetch = fetch;
+  vi.stubGlobal("fetch", fetch);
   const env: Record<string, string> =
     provider === "brave"
       ? { BRAVE_API_KEY: "fake-brave-key" }

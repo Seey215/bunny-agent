@@ -69,6 +69,33 @@ lazily with Node `createRequire`; compiled-package tests cover both supported
 and unsupported peers. V1 requires stable `ai >=6.0.264 <7.0.0`; legacy
 retains `^6.0.0`. Packaged React hooks use `@ai-sdk/react ^3.0.267`.
 
+## Package build follow-up
+
+CI on `f9d5825` revealed that the earlier source-alias checks did not exercise
+runner-pi's original ES2020 libraries and `rootDir: src`. A conformance test
+inside `src` imported sibling runner-harness source (TS6059), its direct fetch
+mock assignment conflicted with installed Response declarations (TS2322), and
+`Object.hasOwn` required a newer library target (TS2550).
+
+The repair moves the cross-package test into runner-pi's `tests` directory,
+uses Vitest global stubbing/restoration, and uses an ES2020-compatible own-property
+helper. Test coverage and the package's compiler configuration remain intact.
+
+A fresh filtered workspace installation from the committed lockfile reproduced
+all three reported compiler failures before the repair. Without source aliases
+or compiler-option overrides, the repaired actual manager/apply-patch/Pi build
+subgraph and Pi typecheck passed. Four directly affected test files passed 96
+tests; the complete Pi suite passed 23 files / 325 tests, including the relocated
+22-case conformance file, using bounded forks with default file isolation.
+Scoped Biome and diff checks passed. Dependency installation used `--ignore-scripts`;
+the actual package build and test scripts were executed separately.
+
+A diagnostic `singleFork` run failed six HTTP cases due to shared global fetch
+stubs; the successful full-package run preserves file isolation. Earlier
+536-test and actual-model matrix evidence is tied to `f9d5825` and is not
+presented as a successful GitHub build. No new model/provider run is claimed
+by this follow-up; GitHub workflow results are reported separately.
+
 ## Remaining gates
 
 Task 7.2 requires a **new runtime-supplied Tavily credential** for a fresh
