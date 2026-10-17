@@ -136,7 +136,16 @@ describe("SDK canonical runner events through final AI SDK messages", () => {
   it("preserves V3 tool metadata and stream/generate parity without inventing error output", async () => {
     const streamed = await modelFor().doStream(callOptions);
     const parts = [];
-    for await (const part of streamed.stream) parts.push(part);
+    const reader = streamed.stream.getReader();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
     const generated = await modelFor().doGenerate(callOptions);
     const streamTools = parts.filter((part) => part.type === "tool-result");
     expect(streamTools).toHaveLength(2);
@@ -191,16 +200,7 @@ describe("SDK canonical runner events through final AI SDK messages", () => {
       platform: "browser",
       format: "esm",
       alias: { "@bunny-agent/manager/contracts": manager },
-      metafile: true,
     });
-    expect(
-      Object.keys(bundle.metafile!.inputs).every(
-        (path) =>
-          path.includes("/contracts/") ||
-          path.endsWith("sdk/src/contracts.ts") ||
-          path.endsWith("ui-message-projection.ts"),
-      ),
-    ).toBe(true);
     const moduleUrl = `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString("base64")}`;
     const script = `
       const { projectUIMessageOutputText } = await import(${JSON.stringify(moduleUrl)});

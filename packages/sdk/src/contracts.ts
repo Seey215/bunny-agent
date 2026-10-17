@@ -52,8 +52,8 @@ export {
   utf16IndexToCodePointOffset,
   utf16RangeToCodePointRange,
 } from "@bunny-agent/manager/contracts";
-export type { UIMessageOutputText } from "./ui-message-projection.js";
+export type { UIMessageOutputText } from "./ui-message-projection";
 export {
   isSearchContractCapabilities,
   projectUIMessageOutputText,
-} from "./ui-message-projection.js";
+} from "./ui-message-projection";

@@ -22,12 +22,12 @@ import {
   streamCodingRunFromSandbox,
   type ToolRef,
 } from "@bunny-agent/manager";
-import type { SearchContractCapabilities } from "../contracts.js";
+import type { SearchContractCapabilities } from "../contracts";
 import {
   isSafeHttpUrl,
   isSearchContractCapabilities,
   isValidCitationContractMetadata,
-} from "../contracts.js";
+} from "../contracts";
 import { getProviderLogger } from "./logging";
 import { assertSearchContractAiSdkSupport } from "./search-contract-ai-sdk";
 import { compileToolRefsFromLanguageModelTools } from "./tool-refs";

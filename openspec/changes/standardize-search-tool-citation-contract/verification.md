@@ -96,6 +96,27 @@ stubs; the successful full-package run preserves file isolation. Earlier
 presented as a successful GitHub build. No new model/provider run is claimed
 by this follow-up; GitHub workflow results are reported separately.
 
+## SDK source consumer follow-up
+
+GitHub's build on `bca7e52` passed runner-pi and then failed in the Next.js web
+application because the SDK's source exports referenced `../contracts.js`.
+Turbopack does not resolve these new internal `.js` paths to the corresponding
+TypeScript source. The SDK now follows its existing extensionless internal
+import style, including the contracts entry's projection re-export.
+
+Actual SDK package checks also exposed a test that directly iterated a
+ReadableStream without the corresponding async-iterable library declaration,
+and a browser-bundle assertion tied to the current working directory. The
+repair uses the standard reader API and retains the browser-platform build plus
+fresh-process projection/JSON replay assertions without checking input filenames.
+
+Using the fresh filtered lockfile installation and actual package configuration,
+the Next.js production build, SDK ESM/declaration build (cleanup disabled), SDK
+typecheck, and all 12 SDK test files / 96 tests passed. Scoped Biome passed for
+three changed TypeScript files. These local checks used Node v24.20.0; GitHub's
+Node 22 workflow is reported separately. No source aliases or compiler-option
+overrides were used for these checks, and no new model/provider run is claimed.
+
 ## Remaining gates
 
 Task 7.2 requires a **new runtime-supplied Tavily credential** for a fresh
