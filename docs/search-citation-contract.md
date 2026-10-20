@@ -14,6 +14,69 @@ ranges, database persistence of annotations) is explicitly out of scope here
 
 ## Requesting the contract
 
+Product integrations can select `searchContractVersion: "auto"` in the SDK
+provider settings or per-model options. This setting is SDK-only: it is never
+sent to the runner, CLI, or coding-run request body. For a Pi daemon, the SDK
+first reads `/healthz` inside the attached sandbox using `SandboxHandle.exec`
+and bounded `curl`. Sandock uses its existing authenticated shell transport
+for this read, followed by its existing native coding-run stream for execution;
+there is no host-side loopback fetch and no extra coding-run request.
+
+The daemon advertises capabilities from the same runner resolver used for the
+stream acknowledgement:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "status": "ok",
+    "capabilities": {
+      "searchContracts": {
+        "pi": {
+          "version": 1,
+          "structured_retrieval": true,
+          "native_annotations": false,
+          "explicit_source_marker_annotations": true
+        }
+      }
+    }
+  }
+}
+```
+
+Auto selects v1 only when Pi advertises both structured retrieval and explicit
+source-marker annotations. A valid healthy old daemon without this advertisement
+uses legacy behavior. Auto on non-Pi runners or without a daemon URL also uses
+legacy behavior. HTTP 401/403/404/500, network errors, malformed responses, and
+timeouts reject before coding execution; they do not prove an old runtime and
+are not cached as one. Every invocation executes at most one coding-run request,
+with no execute-and-retry fallback. Once auto selects v1, the normal strict
+stream acknowledgement checks still apply. The coding request uses the exact
+handle that was probed, even if a reconnecting adapter would attach elsewhere.
+
+Healthy positive and legacy discovery results have a 30-second cache, scoped
+to the handle object, its actual sandbox ID, and normalized daemon URL. Each
+handle retains at most 16 endpoint entries; concurrent subscribers share one
+probe. A canceled subscriber leaves other subscribers active; the transport is
+aborted when all subscribers leave or its four-second budget expires. A transport
+that ignores cancellation remains tracked until it actually settles so a second
+probe cannot overlap it. An in-place daemon restart under the same identity can
+remain cached for up to 30 seconds: auto does not promise instant discovery.
+
+```ts
+const provider = createBunnyAgent({
+  sandbox,
+  daemonUrl: "http://127.0.0.1:3080",
+  runnerType: "pi",
+  searchContractVersion: "auto",
+  env: runnerEnv,
+});
+```
+
+For a strict opt-in with no discovery or compatibility fallback, keep using
+`searchContractVersion: 1` as described below. Omitting the setting remains
+legacy and adds no capability probe.
+
 Set `searchContractVersion: 1` on the request. This is forwarded unchanged
 through every layer:
 
