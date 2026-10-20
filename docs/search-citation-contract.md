@@ -125,7 +125,7 @@ closed identically.
 
 | Runner | `structured_retrieval` | `native_annotations` | `explicit_source_marker_annotations` |
 |---|---|---|---|
-| pi | ✅ `details.web_search` structured success/failure envelope on Brave/Tavily/DuckDuckGo | ❌ | ✅ assistant-authored `[[cite:<source_id>]]` markers resolved into `[n]` + `url_citation` annotations |
+| pi | ✅ `details.web_search` structured success/failure envelope on Brave/Tavily/DuckDuckGo | ❌ | ✅ assistant-authored `[[cite:<Reference>]]` markers resolved into `[n]` + `url_citation` annotations |
 | codex | ⚠️ query-only; Codex's web-search tool is a provider-executed black box with no retrievable result payload — adapted into a truthful `source_details: "unavailable"` v1 envelope rather than inventing sources or a false zero-hit result | ❌ | ❌ (no bridge; Codex never surfaces assistant-visible search results to attach markers to) |
 | claude, gemini, opencode, copilot | ❌ unsupported runner for this version | ❌ | ❌ |
 
@@ -304,13 +304,36 @@ sliceByCodePointRange("A😀B [1]", 4, 7);      // => "[1]"
 For tools without native provider annotations, the model is instructed
 (guidance text from `citationSourceGuidance()` in
 `packages/runner-pi/src/citation-session-cache.ts`) to emit
-`[[cite:<source_id>]]` immediately after a supported statement. A bounded
+`[[cite:<Reference>]]` immediately after a supported statement. Search tool
+readable content and continuation guidance expose compact `ref_<12hex>`
+References derived from the first 12 lowercase hexadecimal characters of the
+canonical source digest. The model does not need to copy a full SHA-256 source
+ID. This alias is a model-facing convenience, not a new source identity: typed
+`details.web_search`, stored source caches, annotation bindings, and emitted
+`source-url` chunks retain the complete canonical `src_<sha256-hex>` ID.
+
+A bounded
 incremental tokenizer (`CitationTextProcessor` in
 `packages/runner-pi/src/citation-processor.ts`) resolves valid tokens into a
 visible `[n]` marker plus a flat annotation spanning exactly that emitted
 marker, plus a binding with `origin: "explicit_source_marker"`. Numbers are
 stable by first reference within one assistant message and shared across
 that message's text parts.
+
+Resolution accepts only an exact compact Reference or an exact legacy
+`[[cite:src_<sha256-hex>]]` marker. It never repairs a typo, uses approximate
+matching, or treats an arbitrary URL as evidence. A compact Reference is resolved
+against verified current sources and the request's captured reachable session
+ancestry. If multiple canonical IDs share an alias, the alias is rejected with
+an internal diagnostic and no annotation; exact canonical references remain
+available. The short alias never overrides canonical identity validation.
+
+References are deterministic, so multiple search calls and resumed, compacted,
+or forked sessions reconstruct the same alias from existing typed provenance.
+Only the captured ancestry is consulted, including sources older than the
+20-source prompt window; sibling branches and later session entries cannot
+introduce sources into the current request. No process-global alias map or
+separate numbering cache is used.
 
 Unknown source IDs, malformed tokens, and markers inside inline code spans or
 fenced code blocks are retained as literal text and produce no annotation —
