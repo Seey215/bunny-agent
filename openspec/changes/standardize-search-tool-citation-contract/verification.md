@@ -164,11 +164,9 @@ summary, and full browser reload passed.
 [Sanitized live acceptance summary](https://pub-5d59c786708441b3a80620d87e7dee2b.r2.dev/tmp/2026-10-20/buda-citations-auto-evidence.json)
 contains the captured answer, annotations and verification boundary.
 
-![Actual local Buda answer after reload, with title citations and no source footer](https://pub-5d59c786708441b3a80620d87e7dee2b.r2.dev/tmp/2026-10-20/buda-citations-auto-reload.png)
-
 The Buda consumer is reviewed separately in
-[kapps PR #8043](https://github.com/vikadata/kapps/pull/8043). These screenshots
-are downstream local product evidence; they do not establish hosted OpenAI
+[kapps PR #8043](https://github.com/vikadata/kapps/pull/8043). Its local browser
+verification does not establish hosted OpenAI
 native annotations, live Brave success, clean published SDK installation,
 Sandock image acceptance, or dev/prod deployment. Current Pi/Codex
 `native_annotations` remains false.

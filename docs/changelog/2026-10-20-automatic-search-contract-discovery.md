@@ -55,3 +55,8 @@ Biome checks for the nine changed TypeScript files.
   ranges, click details, no source footer and browser reload.
 - OpenSpec task 7.2 is now checked. The verification report links sanitized
   live evidence and keeps published-package, Sandock and cloud acceptance open.
+
+## Evidence presentation
+
+- Remove embedded product screenshots from the verification report and PR
+  description. Keep textual validation and the sanitized evidence summary.
